@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Data Analytics Project</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>End-to-End Data Analytics Project</h1>
+            <p class="subtitle">Python + SQL Data Analysis Pipeline</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#project-overview">Overview</a></li>
+                <li><a href="#methodology">Methodology</a></li>
+                <li><a href="#key-findings">Key Findings</a></li>
+                <li><a href="#code">Code</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <section id="project-overview" class="container section">
+        <h2>Project Overview</h2>
+        <div class="flex-container">
+            <div class="text-content">
+                <p>This project demonstrates an end-to-end data analytics pipeline using Python for data processing and SQL Server for data analysis. The workflow involves:</p>
+                <ul>
+                    <li>Data acquisition from Kaggle</li>
+                    <li>Cleaning and preprocessing with Python</li>
+                    <li>Loading data into SQL Server</li>
+                    <li>Performing advanced SQL queries to extract business insights</li>
+                </ul>
+            </div>
+            <div class="image-content">
+                <img src="Data Analysis Project.drawio.png" alt="Data Pipeline Diagram" class="diagram">
+            </div>
+        </div>
+    </section>
+    
+    <section id="methodology" class="container section">
+        <h2>Methodology</h2>
+        <div class="methodology-container">
+            <div class="methodology-step">
+                <div class="step-number">1</div>
+                <h3>Data Collection</h3>
+                <p>Downloaded dataset from Kaggle API containing sales data spanning multiple years.</p>
+            </div>
+            <div class="methodology-step">
+                <div class="step-number">2</div>
+                <h3>Data Cleaning</h3>
+                <p>Used Python to handle missing values, standardize formats, and prepare data for analysis.</p>
+            </div>
+            <div class="methodology-step">
+                <div class="step-number">3</div>
+                <h3>Data Loading</h3>
+                <p>Loaded processed data into SQL Server database for efficient querying and analysis.</p>
+            </div>
+            <div class="methodology-step">
+                <div class="step-number">4</div>
+                <h3>SQL Analysis</h3>
+                <p>Wrote advanced SQL queries to answer specific business questions and extract insights.</p>
+            </div>
+            
+        </div>
+    </section>
+    
+    <section id="key-findings" class="container section">
+        <h2>Key Findings</h2>
+        
+        <div class="finding-card">
+            <h3>Top 10 Revenue-Generating Products</h3>
+            <p>Identified the products that contributed most significantly to overall revenue using SQL aggregation and sorting.</p>
+            <pre><code>
+-- Find top 10 highest revenue generating products
+select top 10 product_id, sum(sale_price) as sales
+from df_orders
+group by product_id
+order by sales desc;
+            </code></pre>
+        </div>
+        
+        <div class="finding-card">
+            <h3>Regional Top Sellers</h3>
+            <p>Analyzed the top 5 highest-selling products across different regions using window functions.</p>
+            <pre><code>
+-- Find top 5 highest selling products in each region
+with cte as (
+select region, product_id, sum(sale_price) as sales
+from df_orders
+group by region, product_id)
+select * from (
+select *, ROW_NUMBER() over(partition by region order by sales desc) as rn
+from cte) A
+where rn<=5
+            </code></pre>
+        </div>
+        
+        <div class="finding-card">
+            <h3>Month-over-Month Growth (2022-2023)</h3>
+            <p>Compared monthly sales growth between 2022 and 2023 using conditional aggregation.</p>
+            <pre><code>
+-- Find month over month growth comparison for 2022 and 2023 sales
+with cte as (
+select year(order_date) as order_year, 
+month(order_date) as order_month,
+sum(sale_price) as sales
+from df_orders
+group by year(order_date), month(order_date) 
+)
+select order_month
+, SUM(case when order_year = 2022 then sales else 0 end) as sales_2022
+, SUM(case when order_year = 2023 then sales else 0 end) as sales_2023
+from cte
+group by order_month
+order by order_month;
+            </code></pre>
+        </div>
+        
+        <div class="finding-card">
+            <h3>Monthly Category Performance</h3>
+            <p>Determined which months had the highest sales for each product category using window functions.</p>
+            <pre><code>
+-- For each category which month had highest sales
+with cte as (
+select category ,format(order_date, 'yyyyMM') as order_ymonth, 
+SUM(sale_price) as sales
+from df_orders
+group by category, format(order_date, 'yyyyMM')
+)
+select * from (
+select *,
+ROW_NUMBER() over(partition by category order by sales desc)
+as rn
+from cte
+) a
+where rn=1
+            </code></pre>
+        </div>
+        
+        <div class="finding-card">
+            <h3>Subcategory Profit Growth</h3>
+            <p>Identified which subcategories experienced the highest profit growth from 2022 to 2023.</p>
+            <pre><code>
+-- Which sub category had highest growth by profit in 2023 compared to 2022
+with cte as (
+select sub_category, 
+year(order_date) as order_year, 
+sum(sale_price) as sales
+from df_orders
+group by sub_category, year(order_date)
+)
+, cte2 as (
+select sub_category
+, SUM(case when order_year = 2022 then sales else 0 end) as sales_2022
+, SUM(case when order_year = 2023 then sales else 0 end) as sales_2023
+from cte
+group by sub_category )
+select top 1 * 
+,(sales_2023 - sales_2022)*100/sales_2022
+from cte2
+order by (sales_2023-sales_2022)*100/sales_2022 desc;
+            </code></pre>
+        </div>
+    </section>
+    
+    <section id="code" class="container section">
+        <h2>Code Samples</h2>
+        
+        <div class="code-tabs">
+            <button class="tab-button active" onclick="openCodeTab(event, 'pythonCode')">Python</button>
+            <button class="tab-button" onclick="openCodeTab(event, 'sqlCode')">SQL</button>
+        </div>
+        
+        <div id="pythonCode" class="tab-content" style="display: block;">
+            <h3>Data Preprocessing with Python</h3>
+            <pre><code>
+# Install required packages
+!pip install kaggle
+!pip install sqlalchemy
+!pip install pyodbc
+
+# Download dataset from Kaggle
+import kaggle
+# https://www.kaggle.com/datasets/ankitbansal06/retail-orders
+!kaggle datasets download ankitbansal06/retail-orders
+
+# Unzip the downloaded file
+import zipfile
+with zipfile.ZipFile('retail-orders.zip', 'r') as zip_ref:
+    zip_ref.extractall('retail-orders')
+
+# Read the data
+import pandas as pd
+df = pd.read_csv('D:\\data-analysis\\retail-orders\\orders.csv', 
+                na_values = ['Not Available', 'unknown'])
+
+# Check data and unique values
+df.head(20)
+df['Ship Mode'].unique()
+df.isna().sum()
+
+# Clean column names - convert to lowercase and replace spaces with underscores
+df.columns = df.columns.str.lower()
+df.columns = df.columns.str.replace(' ', '_')
+
+# Create derived columns for analysis
+df['discount'] = df['list_price']*df['discount_percent']*.01
+df['sale_price'] = df['list_price'] - df['discount']
+df['profit'] = df['sale_price'] - df['cost_price']
+
+# Convert date datatype
+df['order_date'] = pd.to_datetime(df['order_date'], format='%Y-%m-%d')
+
+# Drop unnecessary columns
+df.drop(columns = ['list_price', 'cost_price', 'discount_percent'], inplace=True)
+
+# Connect to SQL Server and load data
+import sqlalchemy as sal
+engine = sal.create_engine('mssql://Foxy_Saravana/master?driver=ODBC+DRIVER+17+FOR+SQL+SERVER')
+conn = engine.connect()
+
+# Load the data into SQL Server
+df.to_sql('df_orders', con=conn, index=False, if_exists='append')
+            </code></pre>
+        </div>
+        
+        <div id="sqlCode" class="tab-content">
+            <h3>SQL Analysis Queries</h3>
+            <pre><code>
+-- Create table schema
+CREATE TABLE df_orders(
+    order_id INT PRIMARY KEY,
+    order_date DATE,
+    ship_mode VARCHAR(20),
+    segment VARCHAR(20),
+    country VARCHAR(20),
+    city VARCHAR(20),
+    state VARCHAR(20),
+    postal_code VARCHAR(20),
+    region VARCHAR(20),
+    category VARCHAR(20),
+    sub_category VARCHAR(20),
+    product_id VARCHAR(20),
+    quantity INT,
+    discount DECIMAL(7, 2),
+    sale_price DECIMAL(7, 2),
+    profit DECIMAL(7, 2)
+)
+
+-- Find top 10 highest revenue generating products
+SELECT TOP 10 product_id, SUM(sale_price) AS sales
+FROM df_orders
+GROUP BY product_id
+ORDER BY sales DESC;
+
+-- Find top 5 highest selling products in each region
+WITH cte AS (
+    SELECT region, product_id, SUM(sale_price) AS sales
+    FROM df_orders
+    GROUP BY region, product_id
+)
+SELECT * FROM (
+    SELECT *, ROW_NUMBER() OVER(PARTITION BY region ORDER BY sales DESC) AS rn
+    FROM cte
+) A
+WHERE rn <= 5;
+
+-- Find month over month growth comparison for 2022 and 2023 sales
+WITH cte AS (
+    SELECT YEAR(order_date) AS order_year, 
+           MONTH(order_date) AS order_month,
+           SUM(sale_price) AS sales
+    FROM df_orders
+    GROUP BY YEAR(order_date), MONTH(order_date) 
+)
+SELECT order_month
+     , SUM(CASE WHEN order_year = 2022 THEN sales ELSE 0 END) AS sales_2022
+     , SUM(CASE WHEN order_year = 2023 THEN sales ELSE 0 END) AS sales_2023
+FROM cte
+GROUP BY order_month
+ORDER BY order_month;
+
+-- For each category which month had highest sales
+WITH cte AS (
+    SELECT category, FORMAT(order_date, 'yyyyMM') AS order_ymonth, 
+           SUM(sale_price) AS sales
+    FROM df_orders
+    GROUP BY category, FORMAT(order_date, 'yyyyMM')
+)
+SELECT * FROM (
+    SELECT *,
+           ROW_NUMBER() OVER(PARTITION BY category ORDER BY sales DESC) AS rn
+    FROM cte
+) a
+WHERE rn = 1;
+
+-- Which sub category had highest growth by profit in 2023 compared to 2022
+WITH cte AS (
+    SELECT sub_category, 
+           YEAR(order_date) AS order_year, 
+           SUM(sale_price) AS sales
+    FROM df_orders
+    GROUP BY sub_category, YEAR(order_date)
+),
+cte2 AS (
+    SELECT sub_category
+         , SUM(CASE WHEN order_year = 2022 THEN sales ELSE 0 END) AS sales_2022
+         , SUM(CASE WHEN order_year = 2023 THEN sales ELSE 0 END) AS sales_2023
+    FROM cte
+    GROUP BY sub_category 
+)
+SELECT TOP 1 * 
+     ,(sales_2023 - sales_2022)*100/sales_2022 AS growth_percent
+FROM cte2
+ORDER BY (sales_2023-sales_2022)*100/sales_2022 DESC;
+            </code></pre>
+        </div>
+    </section>
+    
+    <section id="about" class="container section">
+        <h2>About This Project</h2>
+        <p>This project was developed following the comprehensive tutorial by <a href="https://youtu.be/uL0-6kfiH3g?si=UBCb-16ak1iGu8V7" target="_blank">YouTube Channel</a>. The tutorial provided step-by-step guidance on building an end-to-end data analytics pipeline.</p>
+        
+        <p>Technologies used:</p>
+        <ul class="tech-list">
+            <li>Python (Pandas, NumPy, Jupyter Notebook)</li>
+            <li>Microsoft SQL Server</li>
+            <li>SQL for data analysis</li>
+            <li>Data visualization libraries</li>
+        </ul>
+        
+        <div class="github-link">
+            <a href="https://github.com/yourusername/data-analytics-project" class="github-button">View on GitHub</a>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Data Analytics Project. Created for GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
