@@ -6,7 +6,7 @@
 
 This repository contains an end-to-end data analytics project that demonstrates a complete workflow from data acquisition to analysis and visualization using Python and SQL. The project analyzes sales data to extract meaningful business insights through advanced SQL queries.
 
-### [View Live Demo](https://SaravanaPrashanth.github.io/data-analytics-project/)
+### [View Live Demo](https://saravanaprashanth.github.io/data-analysis/)
 
 ## 🔄 Project Pipeline
 
