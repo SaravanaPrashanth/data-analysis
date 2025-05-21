@@ -1,6 +1,6 @@
 # End-to-End Data Analytics Project (Python + SQL)
 
-[![Project Banner](docs/Data Analysis Project.drawio.png)](https://SaravanaPrashanth.github.io/data-analytics-project/)
+[![Project Banner](https://github.com/SaravanaPrashanth/data-analysis/blob/master/docs/Data%20Analysis%20Project.drawio.png)](https://SaravanaPrashanth.github.io/data-analytics-project/)
 
 ## 📊 Project Overview
 
