@@ -39,9 +39,18 @@ This project answers several important business questions through SQL analysis:
 data-analytics-project/
 ├── data/
 │   ├── raw/             # Original data files
+│   │   └── retail-orders.zip
 │   └── processed/       # Cleaned and transformed data
 ├── notebooks/
-│   └── data_preprocessing.ipynb  # Jupyter notebook with Python code
+│   ├── .ipynb_checkpoints/
+│   └── Orders_data_analysis.ipynb
 ├── sql/
 │   ├── schema.sql       # Database schema creation
-│   └── analysis.sql
+│   └── SQLQuery1.sql    # Your existing SQL query
+├── src/
+│   └── scripts.js       # Your JavaScript file
+├── static/
+│   └── styles.css       # Your CSS file
+├── docs/
+│   └── Data_Analysis_Project.drawio  # Documentation diagram
+└── index.html           # Project homepage
